@@ -24,12 +24,7 @@ app.use(express.json());
 app.use("/uploads",express.static("uploads"))
 
 // Enable CORS
-app.use(
-    cors({
-        origin: "http://localhost:5173", // Allow requests from this origin
-        credentials: true, // Allow cookies and credentials
-    })
-);
+app.use(cors()); 
 
 // Routes 
 app.use("/api/auth", authRoutes);
