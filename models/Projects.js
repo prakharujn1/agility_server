@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const WebinarSchema = new mongoose.Schema({
+const ProjectsSchema = new mongoose.Schema({
     title:{
         type:String, required : true, 
     },
@@ -10,19 +10,13 @@ const WebinarSchema = new mongoose.Schema({
     image:{
         type:String, required : true, 
     },
-    time:{
+    link:{
         type:String, required : true, 
-    },
-    createdBy:{
-        type:String, required : true, 
-    },
-    room_id:{
-        type:String, required : true, 
-    },
+    }, 
     createdAt:{
         type: Date, default : Date.now(),
     },
 }
 )
 
-module.exports = mongoose.model("Webinar", WebinarSchema);
+module.exports = mongoose.model("Projects", ProjectsSchema);

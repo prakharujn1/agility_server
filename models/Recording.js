@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const WebinarSchema = new mongoose.Schema({
+const RecordingSchema = new mongoose.Schema({
     title:{
         type:String, required : true, 
     },
@@ -16,7 +16,7 @@ const WebinarSchema = new mongoose.Schema({
     createdBy:{
         type:String, required : true, 
     },
-    room_id:{
+    link:{
         type:String, required : true, 
     },
     createdAt:{
@@ -25,4 +25,4 @@ const WebinarSchema = new mongoose.Schema({
 }
 )
 
-module.exports = mongoose.model("Webinar", WebinarSchema);
+module.exports = mongoose.model("Recording", RecordingSchema);

@@ -1,11 +1,11 @@
-const Webinar = require("../models/Webinar.js")
+const Recording = require("../models/Recording.js")
 const fs = require("fs");
 
-exports.getAllWebinar = async(req,res)=>{
+exports.getAllRecording = async(req,res)=>{
     try{
-        const webinars = await Webinar.find();
+        const recordings = await Recording.find();
         res.json({
-            webinars,
+            recordings,
         })
     }
     catch (error) {
@@ -15,32 +15,32 @@ exports.getAllWebinar = async(req,res)=>{
     }
 }
 
-exports.createWebinar = async (req, res) => {
-    const { title, description, time, createdBy,room_id } = req.body;
+exports.createRecording = async (req, res) => {
+    const { title, description, time, createdBy,link } = req.body;
 
     const image = req.file;
 
-    await Webinar.create({
+    await Recording.create({
         title,
         description,
         time,
         createdBy,
-        room_id,
+        link,
         image: image?.path,
     });
 
     res.status(201).json({
-        message: "Webinar Created Successfully"
+        message: "Recording Created Successfully"
     }
     )
 }
 
-exports.deleteWebinar = async (req, res) => {
+exports.deleteRecording = async (req, res) => {
     try {
-        const webinar = await Webinar.findById(req.params.id);
+        const recording = await Recording.findById(req.params.id);
         
 
-        fs.unlink(webinar.image, (err) => {
+        fs.unlink(recording.image, (err) => {
             if (err) {
                 // console.error("Error deleting video file:", err);
             } else {
@@ -48,9 +48,9 @@ exports.deleteWebinar = async (req, res) => {
             }
         })
 
-        await webinar.deleteOne();
+        await recording.deleteOne();
         res.json({
-            message: "Webinar Deleted"
+            message: "Recording Deleted"
         })
     }
     catch (error) {

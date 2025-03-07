@@ -10,6 +10,10 @@ const enquiryRoutes = require("./routes/enquiryRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const webinarRoutes = require("./routes/webinarRoutes");
+const recordingRoutes = require("./routes/recordingRoutes");
+const projectRoutes = require("./routes/projectRoutes");
+
+
 
 
 const razorpay = require("./config/razorpay");
@@ -24,12 +28,7 @@ app.use(express.json());
 app.use("/uploads",express.static("uploads"))
 
 // Enable CORS
-app.use(
-    cors({
-        origin: "http://localhost:5173", // Allow requests from this origin
-        credentials: true, // Allow cookies and credentials
-    })
-);
+app.use(cors()); 
 
 // Routes 
 app.use("/api/auth", authRoutes);
@@ -39,6 +38,9 @@ app.use("/api/enquiry", enquiryRoutes);
 app.use("/api", courseRoutes); 
 app.use("/api", adminRoutes);
 app.use("/api",webinarRoutes);
+app.use("/api",recordingRoutes);
+app.use("/api",projectRoutes);
+
 
 
 // MongoDB Connection
