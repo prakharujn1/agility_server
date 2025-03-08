@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
  
 // Register 
 exports.register = async (req, res) => {
-    const { username, email, password, role = "user" } = req.body; // Default role
+    const { username, email, password, role = "student" } = req.body; // Default role
 
     try {
         // Check if user already exists
