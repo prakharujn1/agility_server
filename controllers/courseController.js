@@ -5,6 +5,7 @@ const User = require("../models/User.js");
 const Payment = require("../models/Payment.js");
 
 const crypto = require("crypto");
+const Assignment = require("../models/Assignment.js");
 
 exports.getAllCourses = async(req,res)=>{
     try{
@@ -58,6 +59,32 @@ exports.fetchLectures = async(req,res) =>{
     }
 }
 
+//fetch assignments
+exports.fetchAssignments = async(req,res) =>{
+    try{
+        const assignments = await Assignment.find({course: req.params.id})
+
+        const user = await User.findById(req.user.id);
+
+        if(user.role==="admin"){
+            return res.json({assignments});
+        }
+
+        if(!user.subscription.includes(req.params.id)){
+            return res.status(400).json({message: "You have not subscribed to this course"})
+        }
+
+        res.json({assignments});
+
+    }
+    catch (error) {
+        res.status(500).json({
+          message: error.message,
+        });
+    }
+}
+
+
 exports.fetchLecture = async(req,res) =>{
     try{
         const lecture = await Lecture.findById(req.params.id);
@@ -80,6 +107,31 @@ exports.fetchLecture = async(req,res) =>{
         });
     }
 }
+
+//fetch single assignment
+exports.fetchAssignment = async(req,res) =>{
+    try{
+        const assignment = await Assignment.findById(req.params.id);
+
+        const user = await User.findById(req.user.id);
+
+        if(user.role==="admin"){
+            return res.json({assignment});
+        }
+
+        if(!user.subscription.includes(assignment.course)){
+            return res.status(400).json({message: "You have not subscribed to this course"})
+        }
+
+        res.json({assignment});
+    }
+    catch (error) {
+        res.status(500).json({
+          message: error.message,
+        });
+    }
+}
+
 
 exports.getMyCourses = async(req,res)=>{
     try{

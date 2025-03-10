@@ -1,3 +1,4 @@
+const Assignment = require("../models/Assignment");
 const Course = require("../models/Course");
 const Lecture = require("../models/Lecture");
 const User = require("../models/User");
@@ -56,6 +57,37 @@ exports.addLectures = async (req, res) => {
     }
 }
 
+// add assignment
+exports.addAssignment = async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id)
+
+        if (!course) return res.status(404).json({
+            message: "No Course with this id",
+        })
+
+        const { title } = req.body;
+
+        const file = req.file;
+
+        const assignment = await Assignment.create({
+            title,
+            docs: file?.path,
+            course: course._id,
+        })
+
+        res.status(201).json({
+            message: "Assignment Added",
+            assignment,
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+}
+
 exports.deleteLecture = async (req, res) => {
     try {
         const lecture = await Lecture.findById(req.params.id);
@@ -78,29 +110,68 @@ exports.deleteLecture = async (req, res) => {
     }
 }
 
+//delete assignment
+
+exports.deleteAssignment = async (req, res) => {
+    try {
+        const assignment = await Assignment.findById(req.params.id);
+
+        // fs.unlink(lecture.video, (err) => {
+        //     if (err) {
+        //         console.error("Error deleting video file:", err);
+        //     } else {
+        //         console.log("Video file deleted");
+        //     }
+        // })
+
+        await assignment.deleteOne();
+        res.json({ message: "Assignment deleted" });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+}
+
 const unlinkAsync = promisify(fs.unlink)
 
 exports.deleteCourse = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
         const lectures = await Lecture.find({ course: course._id })
+        const assignments = await Assignment.find({ course: course._id})
+
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
 
         await Promise.all(
             lectures.map(async (lecture) => {
                 await unlinkAsync(lecture.video);
-                console.log("video deleted");
+                //console.log("video deleted");
             })
         )
 
+        await Promise.all(
+            assignments.map(async (assignment) => {
+                await unlinkAsync(assignment.docs);
+                //console.log("assignment deleted");
+            })
+        )
+
+        
+
         fs.unlink(course.image, (err) => {
             if (err) {
-                console.error("Error deleting video file:", err);
+                console.error("Error deleting image file:", err);
             } else {
                 console.log("image deleted");
             }
         })
 
         await Lecture.find({ course: req.params.id }).deleteMany();
+        await Assignment.find({ course: req.params.id }).deleteMany();
         await course.deleteOne();
 
         await User.updateMany({}, { $pull: { subscription: req.params.id } });
