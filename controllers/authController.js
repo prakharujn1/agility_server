@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
 
         // res.status(201).json({ token, user: { id: user._id, username, email, role: user.role,subscription: user.subscription  } });
     } catch (error) {
-        // console.error("Registration error:", error);
+        console.error("Registration error:", error);
         res.status(500).json({ message: "Something went wrong! Please try again later." });
     }
 };
