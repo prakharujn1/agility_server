@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { default: sendMail, sendForgotMail } = require("../middleware/sendMail"); // for otp verification
+import sendMail, { sendForgotMail } from "../middlewares/sendMail.js";
 
 // Register 
 exports.register = async (req, res) => {
