@@ -27,8 +27,12 @@ app.use(express.json());
 
 app.use("/uploads",express.static("uploads"))
 
-// Enable CORS
-app.use(cors()); 
+// Enable CORS with proper configuration
+app.use(cors({
+  origin: "https://agilityai.co.in",  // Allow frontend domain
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true // Allow cookies and authentication headers
+}));
 
 // Routes 
 app.use("/api/auth", authRoutes);
