@@ -12,10 +12,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const webinarRoutes = require("./routes/webinarRoutes");
 const recordingRoutes = require("./routes/recordingRoutes");
 const projectRoutes = require("./routes/projectRoutes");
-
-
-
-
 const razorpay = require("./config/razorpay");
 
 
@@ -27,8 +23,12 @@ app.use(express.json());
 
 app.use("/uploads",express.static("uploads"))
 
-// Enable CORS
-app.use(cors()); 
+// Enable CORS with proper configuration
+app.use(cors({
+  origin: "https://agilityai.co.in",  // Allow frontend domain
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true // Allow cookies and authentication headers
+}));
 
 // Routes 
 app.use("/api/auth", authRoutes);

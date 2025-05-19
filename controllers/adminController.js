@@ -3,22 +3,28 @@ const Course = require("../models/Course");
 const Lecture = require("../models/Lecture");
 const User = require("../models/User");
 const fs = require("fs");
+const cloudinary = require("../middleware/cloudinary");
 const { promisify } = require("util");
 
 exports.createCourse = async (req, res) => {
     const { title, description, category, createdBy, duration, price } = req.body;
+  const filePath = req.file.path;          // Multer saved the tmp file for us
 
-    const image = req.file;
+  // ⬆️  Upload to Cloudinary
+  const result = await cloudinary.uploader.upload(filePath, { folder: "courses" });
 
-    await Course.create({
-        title,
-        description,
-        category,
-        createdBy,
-        image: image?.path,
-        duration,
-        price
-    });
+  fs.unlinkSync(filePath);                 // remove local tmp file
+
+     await Course.create({
+    title,
+    description,
+    category,
+    createdBy,
+    image: result.secure_url,              // for the frontend
+    imageId: result.public_id,             // keep this so we can delete later
+    duration,
+    price
+  });
 
     res.status(201).json({
         message: "Course Created Successfully"
@@ -27,124 +33,129 @@ exports.createCourse = async (req, res) => {
 }
 
 exports.addLectures = async (req, res) => {
-    try {
-        const course = await Course.findById(req.params.id)
-
-        if (!course) return res.status(404).json({
-            message: "No Course with this id",
-        })
-
-        const { title, description } = req.body;
-
-        const file = req.file;
-
-        const lecture = await Lecture.create({
-            title,
-            description,
-            video: file?.path,
-            course: course._id,
-        })
-
-        res.status(201).json({
-            message: "Lecture Added",
-            lecture,
-        })
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "No Course with this id" });
     }
-    catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-}
+
+    const { title, description } = req.body;
+    const filePath = req.file.path;
+
+    // ⬆️ Upload video to Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "lectures",
+      resource_type: "video",
+    });
+
+    fs.unlinkSync(filePath); // Remove temp file
+
+    const lecture = await Lecture.create({
+      title,
+      description,
+      video: result.secure_url,     // public video URL
+      videoId: result.public_id,    // needed for deletion
+      course: course._id,
+    });
+
+    res.status(201).json({
+      message: "Lecture Added",
+      lecture,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // add assignment
 exports.addAssignment = async (req, res) => {
-    try {
-        const course = await Course.findById(req.params.id)
-
-        if (!course) return res.status(404).json({
-            message: "No Course with this id",
-        })
-
-        const { title } = req.body;
-
-        const file = req.file;
-
-        const assignment = await Assignment.create({
-            title,
-            docs: file?.path,
-            course: course._id,
-        })
-
-        res.status(201).json({
-            message: "Assignment Added",
-            assignment,
-        })
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "No Course with this id" });
     }
-    catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-}
+
+    const { title } = req.body;
+    const filePath = req.file.path;          // multer temp file
+
+    // ⬆️ Upload to Cloudinary as a raw asset
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "assignments",
+        //resource_type: "raw",   
+        // ✅ for PDFs, DOCXs, ZIPs, etc.
+    });
+
+    fs.unlinkSync(filePath);                 // remove temp file
+
+    const assignment = await Assignment.create({
+      title,
+      docs: result.secure_url,               // public URL
+      docsId: result.public_id,              // needed for deletion
+      course: course._id,
+    });
+
+    res.status(201).json({ message: "Assignment Added", assignment });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 exports.deleteLecture = async (req, res) => {
-    try {
-        const lecture = await Lecture.findById(req.params.id);
-
-        // fs.unlink(lecture.video, (err) => {
-        //     if (err) {
-        //         console.error("Error deleting video file:", err);
-        //     } else {
-        //         console.log("Video file deleted");
-        //     }
-        // })
-
-        await lecture.deleteOne();
-        res.json({ message: "Lecture deleted" });
+  try {
+    const lecture = await Lecture.findById(req.params.id);
+    if (!lecture) {
+      return res.status(404).json({ message: "Lecture not found" });
     }
-    catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-}
+
+    // ⬇️ Delete video from Cloudinary
+    await cloudinary.uploader.destroy(lecture.videoId, {
+      resource_type: "video",
+    });
+
+    // ⬇️ Remove lecture from DB
+    await lecture.deleteOne();
+
+    res.json({ message: "Lecture deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 //delete assignment
 
 exports.deleteAssignment = async (req, res) => {
-    try {
-        const assignment = await Assignment.findById(req.params.id);
-
-        // fs.unlink(lecture.video, (err) => {
-        //     if (err) {
-        //         console.error("Error deleting video file:", err);
-        //     } else {
-        //         console.log("Video file deleted");
-        //     }
-        // })
-
-        await assignment.deleteOne();
-        res.json({ message: "Assignment deleted" });
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ message: "Assignment not found" });
     }
-    catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-}
+
+    // ⬇️ Remove from Cloudinary
+    await cloudinary.uploader.destroy(assignment.docsId); // no resource_type option
+
+
+    // ⬇️ Remove DB record
+    await assignment.deleteOne();
+
+    res.json({ message: "Assignment deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const unlinkAsync = promisify(fs.unlink)
 
 exports.deleteCourse = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
-        const lectures = await Lecture.find({ course: course._id })
-        const assignments = await Assignment.find({ course: course._id})
+    if (!course) return res.status(404).json({ message: "Course not found" });
 
-        if (!course) {
-            return res.status(404).json({ message: "Course not found" });
-        }
+    const lectures    = await Lecture.find({ course: course._id });
+    const assignments = await Assignment.find({ course: course._id });
+
+    
+    /* ---- delete Cloudinary image ---- */
+    await cloudinary.uploader.destroy(course.imageId);
 
         await Promise.all(
             lectures.map(async (lecture) => {
@@ -162,13 +173,13 @@ exports.deleteCourse = async (req, res) => {
 
         
 
-        fs.unlink(course.image, (err) => {
-            if (err) {
-                console.error("Error deleting image file:", err);
-            } else {
-                console.log("image deleted");
-            }
-        })
+        // fs.unlink(course.image, (err) => {
+        //     if (err) {
+        //         console.error("Error deleting image file:", err);
+        //     } else {
+        //         console.log("image deleted");
+        //     }
+        // })
 
         await Lecture.find({ course: req.params.id }).deleteMany();
         await Assignment.find({ course: req.params.id }).deleteMany();

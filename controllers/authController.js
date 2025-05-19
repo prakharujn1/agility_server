@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { default: sendMail, sendForgotMail } = require("../middleware/sendMail"); // for otp verification
+const { sendMail, sendForgotMail } = require("../middleware/sendMail"); // for otp verification
 
 // Register 
 exports.register = async (req, res) => {
@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
 
         // res.status(201).json({ token, user: { id: user._id, username, email, role: user.role,subscription: user.subscription  } });
     } catch (error) {
-        // console.error("Registration error:", error);
+        console.error("Registration error:", error);
         res.status(500).json({ message: "Something went wrong! Please try again later." });
     }
 };

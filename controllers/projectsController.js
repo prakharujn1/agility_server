@@ -1,9 +1,11 @@
 const Projects = require("../models/Projects.js")
 const fs = require("fs");
+const cloudinary = require("../middleware/cloudinary");
+
 
 exports.getAllProjects = async(req,res)=>{
     try{
-        const project = await Projects.find();
+        const project = await Projects.find(); 
         res.json({
             project,
         })
@@ -16,48 +18,40 @@ exports.getAllProjects = async(req,res)=>{
 }
 
 exports.createProject = async (req, res) => {
-    const { title, description, createdBy,link } = req.body;
+  const { title, description, createdBy, link } = req.body;
+  const filePath = req.file.path;
 
-    const image = req.file;
+  const result = await cloudinary.uploader.upload(filePath, { folder: "projects" });
+  fs.unlinkSync(filePath);           // delete local temp file
 
-    await Projects.create({
-        title,
-        description,
-        createdBy,
-        link,
-        image: image?.path,
-    });
+  await Projects.create({
+    title,
+    description,
+    createdBy,
+    link,
+    image: result.secure_url,        // for the frontend
+    imageId: result.public_id        // <= NEW: keep this for deletes
+  });
 
-    res.status(201).json({
-        message: "Projects Created Successfully"
-    }
-    )
-}
+  res.status(201).json({ message: "Project Created Successfully" });
+};
 
 exports.deleteProject = async (req, res) => {
-    try {
-        const project = await Projects.findById(req.params.id);
-        
+  try {
+    const project = await Projects.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
 
-        fs.unlink(project.image, (err) => {
-            if (err) {
-                // console.error("Error deleting video file:", err);
-            } else {
-                // console.log("image deleted");
-            }
-        })
+    // 1. Delete from Cloudinary
+    await cloudinary.uploader.destroy(project.imageId);
 
-        await project.deleteOne();
-        res.json({
-            message: "Project Deleted"
-        })
-    }
-    catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-}
+    // 2. Delete the DB record
+    await project.deleteOne();
+
+    res.json({ message: "Project Deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
 

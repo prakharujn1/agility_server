@@ -10,6 +10,9 @@ const WebinarSchema = new mongoose.Schema({
     image:{
         type:String, required : true, 
     },
+    imageId:{
+        type:String, required : true, 
+    },
     time:{
         type:String, required : true, 
     },

@@ -1,7 +1,7 @@
-import { createTransport } from "nodemailer";
+const { createTransport } = require("nodemailer");
 
 const sendMail = async (email, subject, data) => {
-    const transport = createTransport({
+    const transport = createTransport({ 
         host: "smtp.gmail.com",
         port: 465,
         auth: {
@@ -65,9 +65,7 @@ const sendMail = async (email, subject, data) => {
     });
 };
 
-export default sendMail;
-
-export const sendForgotMail = async(subject, data) =>{
+const sendForgotMail = async(subject, data) => {
     const transport = createTransport({
         host: "smtp.gmail.com",
         port: 465,
@@ -141,14 +139,12 @@ export const sendForgotMail = async(subject, data) =>{
     </html>
     `;    
 
-
     await transport.sendMail({
         from: process.env.Gmail,
         to: data.email,
         subject,
         html,
     });
+};
 
-
-
-}
+module.exports = { sendMail, sendForgotMail };

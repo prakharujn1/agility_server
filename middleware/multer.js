@@ -1,15 +1,14 @@
 const multer = require("multer");
-const { v4: uuid } = require("uuid");
+const path = require("path");
 
 const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, "uploads");
+  destination: (req, file, cb) => {
+    cb(null, "uploads"); // create 'temp' folder if not exists
   },
-  filename(req, file, cb) {
-    const id = uuid();
-    const extName = file.originalname.split(".").pop();
-    const fileName = `${id}.${extName}`;
-    cb(null, fileName);
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = Date.now() + ext;
+    cb(null, name);
   },
 });
 
